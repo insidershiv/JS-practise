@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CheckCircle, Circle, Clock, Target } from "lucide-react";
+import { CheckCircle, Circle, Clock, Target } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -1543,41 +1543,24 @@ export default function CodingPractice() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back to Roadmap</span>
-              </Link>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Coding Practice
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Master DSA for Senior Frontend Interviews
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="flex items-center space-x-2">
-                <Target className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">
-                  {totalCompleted}/{totalTarget}
-                </span>
-              </div>
-              <p className="text-sm text-gray-500">Problems Completed</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Coding Practice
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Master DSA for Senior Frontend Interviews
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Target className="w-5 h-5 text-blue-600" aria-hidden />
+            <span className="font-semibold text-gray-900">
+              {totalCompleted}/{totalTarget}
+            </span>
+            <span className="text-gray-500">completed</span>
+          </div>
+        </header>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Categories Sidebar */}
           <div className="lg:col-span-1">

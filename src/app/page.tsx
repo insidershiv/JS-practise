@@ -369,33 +369,23 @@ export default function InterviewRoadmap() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Senior Frontend Interview Prep
+          </h1>
+          <p className="text-gray-600 mt-1">8-Week Roadmap to Success</p>
+          <div className="flex flex-wrap gap-6 mt-4 text-sm">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Senior Frontend Interview Prep
-              </h1>
-              <p className="text-gray-600 mt-1">8-Week Roadmap to Success</p>
+              <span className="text-gray-500">Target role</span>
+              <span className="ml-2 font-medium text-gray-900">Senior Frontend Engineer</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Target Role</p>
-                <p className="font-semibold text-gray-900">
-                  Senior Frontend Engineer
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Time Commitment</p>
-                <p className="font-semibold text-gray-900">10-15 hrs/week</p>
-              </div>
+            <div>
+              <span className="text-gray-500">Time commitment</span>
+              <span className="ml-2 font-medium text-gray-900">10–15 hrs/week</span>
             </div>
           </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        </header>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Weekly Progress */}
           <div className="lg:col-span-1">
@@ -407,12 +397,20 @@ export default function InterviewRoadmap() {
                 {weeks.map((week) => (
                   <div
                     key={week.id}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                    role="button"
+                    tabIndex={0}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
                       selectedWeek === week.id
                         ? "border-blue-500 bg-blue-50"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                     onClick={() => setSelectedWeek(week.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedWeek(week.id);
+                      }
+                    }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-medium text-gray-900">

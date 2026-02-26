@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowLeft,
   BookOpen,
   ChevronDown,
   ChevronRight,
@@ -12,7 +11,6 @@ import {
   Code2,
   Lightbulb,
 } from "lucide-react";
-import Link from "next/link";
 import { useState, useMemo, useCallback } from "react";
 import {
   feiQuestions,
@@ -104,35 +102,26 @@ export default function FEIQuestionsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/90 backdrop-blur-sm">
+      {/* Page header */}
+      <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/"
-                className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                aria-label="Back to roadmap"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-                  From My Interview
-                </h1>
-                <p className="text-sm text-slate-500">
-                  Questions & solutions from your FEI prep — categorized and ready to drill
-                </p>
-              </div>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+                From My Interview
+              </h1>
+              <p className="text-sm text-slate-500 mt-0.5">
+                Questions & solutions from your FEI prep — categorized and ready to drill
+              </p>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm" aria-label={`Practiced ${stats.done} of ${stats.total} questions`}>
               <span className="text-slate-500">Practiced</span>
               <span className="font-semibold text-slate-900">
                 {stats.done}/{stats.total}
               </span>
-              <div className="w-16 h-2 rounded-full bg-slate-200 overflow-hidden">
+              <div className="w-16 h-2 rounded-full bg-slate-200 overflow-hidden" role="progressbar" aria-valuenow={stats.pct} aria-valuemin={0} aria-valuemax={100}>
                 <div
-                  className="h-full rounded-full bg-indigo-500 transition-all"
+                  className="h-full rounded-full bg-indigo-500 transition-all duration-300"
                   style={{ width: `${stats.pct}%` }}
                 />
               </div>

@@ -3,6 +3,7 @@
 import {
   BookOpen,
   CheckCircle,
+  ChevronRight,
   Circle,
   Clock,
   Code,
@@ -561,6 +562,34 @@ export default function InterviewRoadmap() {
                   <p className="text-sm text-gray-600">{topic.description}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* FEI Questions from interview */}
+        <div className="mt-8">
+          <div className="rounded-xl shadow-sm border border-indigo-100 p-6 bg-indigo-50/30">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-indigo-100 rounded-lg">
+                  <BookOpen className="w-6 h-6 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    From My Interview
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Questions & solutions from your FEI prep — categorized by section and difficulty
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/fei-questions"
+                className="inline-flex items-center gap-2 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+              >
+                Open curriculum
+                <ChevronRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
         </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { CheckCircle, Circle, Clock, Target } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 
 interface Problem {

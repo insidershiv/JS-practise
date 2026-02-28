@@ -78,7 +78,7 @@ export function InterviewPanel({
     setInput("");
     setStreamingContent("");
     runInitialStream();
-  }, [isOpen, question?.id, runInitialStream]);
+  }, [isOpen, question, runInitialStream]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

@@ -10,7 +10,9 @@ import {
   Circle,
   Code2,
   Lightbulb,
+  MessageCircle,
 } from "lucide-react";
+import { InterviewPanel } from "./InterviewPanel";
 import { useState, useMemo, useCallback } from "react";
 import {
   feiQuestions,
@@ -67,6 +69,7 @@ export default function FEIQuestionsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showSolutionId, setShowSolutionId] = useState<string | null>(null);
   const [practiced, setPracticed] = useState<Set<string>>(loadPracticed);
+  const [interviewQuestion, setInterviewQuestion] = useState<FEIQuestion | null>(null);
 
   const togglePracticed = useCallback((id: string) => {
     setPracticed((prev) => {
@@ -200,9 +203,16 @@ export default function FEIQuestionsPage() {
                 setShowSolutionId((id) => (id === q.id ? null : q.id))
               }
               onTogglePracticed={() => togglePracticed(q.id)}
+              onPracticeWithAI={() => setInterviewQuestion(q)}
             />
           ))}
         </div>
+
+        <InterviewPanel
+          question={interviewQuestion}
+          isOpen={interviewQuestion !== null}
+          onClose={() => setInterviewQuestion(null)}
+        />
 
         {filtered.length === 0 && (
           <div className="text-center py-12 text-slate-500">
@@ -339,6 +349,7 @@ function QuestionCard({
   onToggleExpand,
   onToggleSolution,
   onTogglePracticed,
+  onPracticeWithAI,
 }: {
   question: FEIQuestion;
   isExpanded: boolean;
@@ -347,23 +358,32 @@ function QuestionCard({
   onToggleExpand: () => void;
   onToggleSolution: () => void;
   onTogglePracticed: () => void;
+  onPracticeWithAI: () => void;
 }) {
   const diffStyle = DIFFICULTY_STYLES[q.difficulty];
   const sectionStyle = SECTION_COLORS[q.section];
 
   return (
     <article
-      className={`rounded-xl border-2 bg-white shadow-sm overflow-hidden transition-all ${
-        isExpanded ? "border-indigo-300 shadow-md" : "border-slate-200 hover:border-slate-300"
+      className={`rounded-xl border-2 bg-white overflow-hidden transition-colors ${
+        isExpanded ? "border-indigo-400" : "border-slate-200 hover:border-slate-300"
       }`}
     >
-      {/* Card header — always visible */}
-      <button
-        type="button"
+      {/* Card header — always visible (div + role=button to avoid nesting a button inside a button) */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={onToggleExpand}
-        className="w-full flex items-start gap-3 p-4 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset rounded-t-xl"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggleExpand();
+          }
+        }}
+        className="w-full flex items-start gap-3 p-4 text-left cursor-pointer rounded-t-xl focus:outline-none focus-visible:outline-2 focus-visible:outline-indigo-500 focus-visible:outline-offset-2 focus-visible:outline-solid"
+        aria-expanded={isExpanded}
       >
-        <span className="mt-0.5 text-slate-400">
+        <span className="mt-0.5 text-slate-400" aria-hidden>
           {isExpanded ? (
             <ChevronDown className="w-5 h-5" />
           ) : (
@@ -400,7 +420,7 @@ function QuestionCard({
             <Circle className="w-5 h-5 text-slate-300" />
           )}
         </button>
-      </button>
+      </div>
 
       {/* Expanded: question + solution */}
       {isExpanded && (
@@ -425,18 +445,28 @@ function QuestionCard({
               </div>
             )}
 
-            {/* Solution toggle */}
+            {/* Practice with AI + Solution toggle */}
             <div>
-              <button
-                type="button"
-                onClick={onToggleSolution}
-                className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
-              >
-                <Lightbulb className="w-4 h-4" />
-                {showSolution ? "Hide solution" : "Show solution"}
-              </button>
+              <div className="flex flex-wrap items-center gap-4">
+                <button
+                  type="button"
+                  onClick={onPracticeWithAI}
+                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Practice with AI
+                </button>
+                <button
+                  type="button"
+                  onClick={onToggleSolution}
+                  className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                >
+                  <Lightbulb className="w-4 h-4" />
+                  {showSolution ? "Hide solution" : "Show solution"}
+                </button>
+              </div>
               {showSolution && (
-                <div className="mt-2 rounded-lg bg-amber-50/80 border border-amber-200 p-4 text-slate-800 text-sm leading-relaxed">
+                <div className="mt-2 rounded-lg bg-sky-50/90 border border-sky-200 p-4 text-slate-800 text-sm leading-relaxed">
                   <SolutionBody text={q.solution} />
                 </div>
               )}

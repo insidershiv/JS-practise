@@ -417,9 +417,44 @@ function throttle(fn, delay) {
     section: "js-utilities",
     difficulty: "hard",
     question: `Throttle that runs immediately AND runs once more with the **last** arguments after the delay ends. (1) What extra state would you need? (2) Why can't you just run fn inside setTimeout with current args? (Timeline: t=0 throttled("A"), t=200 "B", t=400 "C" — trailing should run with "C", not "A".)`,
-    solution: `**Why you need extra state:** The setTimeout closes over the **first** call's args. So if you do \`setTimeout(() => { fn.apply(this, args); isThrottled = false; }, delay)\`, the trailing execution uses the **first** invocation's args, not the latest. Without extra state you'd run the first call twice (leading + trailing with same args). To implement correct trailing behavior you must: (1) Remember that another call happened, (2) Remember the latest arguments (and context), (3) Run only once with the latest data. So we need \`lastArgs\`, \`lastContext\` (and optionally a flag).
+    solution: `**Step 1 — Why you need extra state:** The callback you pass to setTimeout **closes over** the variables at the time the timeout is scheduled. So if you do \`setTimeout(() => { fn.apply(this, args); isThrottled = false; }, delay)\`, that \`args\` is the **first** call's args (e.g. "A"). When the timeout runs, it will call fn with "A", not with "C". So trailing would run with the wrong arguments. To run trailing with the **last** arguments you must: (1) Remember that a call happened during the throttle window, (2) Store the **latest** arguments and \`this\`, (3) When the delay ends, run fn once with that latest data. So we need \`lastArgs\`, \`lastContext\` (and we reuse the same \`isThrottled\` lock).
 
-**Minimal state:** \`let lastArgs = null; let lastContext = null;\`. When throttled, update lastArgs and lastContext and return. When delay ends: if lastArgs exists, run \`fn.apply(context, lastArgs)\`, clear state, then set isThrottled = false. **One-liner:** "We need extra state because the trailing execution must use the latest invocation, not the one that started the throttle window."`,
+**Step 2 — Full implementation (leading + trailing):**
+
+\`\`\`js
+function throttleLeadingTrailing(fn, delay) {
+  let isThrottled = false;
+  let lastArgs = null;
+  let lastContext = null;
+  let timerId = null;
+
+  function runTrailing() {
+    timerId = null;
+    if (lastArgs !== null) {
+      fn.apply(lastContext, lastArgs);
+      lastArgs = null;
+      lastContext = null;
+    }
+    isThrottled = false;
+  }
+
+  return function (...args) {
+    if (isThrottled) {
+      lastArgs = args;
+      lastContext = this;
+      return;
+    }
+    // Leading: run immediately
+    fn.apply(this, args);
+    isThrottled = true;
+    lastArgs = null;
+    lastContext = null;
+    timerId = setTimeout(runTrailing, delay);
+  };
+}
+\`\`\`
+
+**Behavior:** First call: run fn immediately (leading), set isThrottled = true, schedule runTrailing. Any call during delay: save args and context in lastArgs/lastContext, return. When delay ends: if we saved a call, run fn with lastArgs/lastContext (trailing), then clear lastArgs/lastContext and isThrottled. So trailing runs at most once per window and always with the **last** invocation's arguments and this. **One-liner:** "We need extra state because the setTimeout callback closes over the first call; to run trailing with the latest call we must store lastArgs and lastContext and run with them when the delay ends."`,
     tags: ["throttle", "trailing", "state", "closure"],
   },
   {
@@ -430,11 +465,60 @@ function throttle(fn, delay) {
     question: `Implement once(fn). Requirements: fn executes only once; subsequent calls return the same result; preserve this and arguments.
 
 **Follow-ups:** (1) What if fn returns a promise? Will your implementation work? Will multiple calls share the same promise? Is that desirable? (2) What if the promise rejects — should future calls retry or keep returning the rejected promise? (3) How would you modify once() so it retries if the promise rejects but still runs only once on success?`,
-    solution: `**Sync implementation:** Closure with \`called\` and \`result\`. If called return result; else result = fn.apply(this, args), called = true, return result.
+    solution: `**Step 1 — Sync implementation (full code):**
 
-**If fn returns a promise:** Caching the promise is correct. Multiple callers can share the same promise and get the same eventual result (one network request, no race). Desirable for config loading, initialization, feature flags, auth bootstrap — this is how React Query, SWR, Apollo work. **If the promise rejects:** Two valid designs. (A) Strict once: cache even failures; future calls get the same rejected promise. (B) Retry on failure: only mark called = true on resolve; on reject, reset state so the next call retries.
+\`\`\`js
+function once(fn) {
+  let called = false;
+  let result;
+  return function (...args) {
+    if (called) return result;
+    result = fn.apply(this, args);
+    called = true;
+    return result;
+  };
+}
+\`\`\`
 
-**Retry-on-failure once (concept):** Update \`called\` to true only when the promise **resolves**. If it rejects, set result = null (or don't set called) so the next call runs fn again. Store the in-flight promise so multiple callers during the first attempt still share the same promise. **Interview one-liner:** "For async once, we cache the in-flight promise and only mark execution as complete on successful resolution; failures reset state to allow retry."`,
+Closure holds \`called\` and \`result\`. First call: run fn, store result, set called = true, return result. Later calls: return cached result without calling fn. We preserve \`this\` and \`args\` by using fn.apply(this, args).
+
+**Step 2 — Follow-up (1): fn returns a promise.** The sync implementation still works: we cache whatever fn returns. If it's a promise, we cache that promise. So:
+• First call: result = fn.apply(this, args) (a promise); called = true; return result.
+• Second call: return result (the same promise).
+Multiple callers therefore share the **same promise** — one in-flight request, same outcome for everyone. That is **desirable** for config loading, auth bootstrap, feature flags (same pattern as React Query, SWR, Apollo). So yes, the implementation works; yes, multiple calls share the same promise; yes, that's desirable.
+
+**Step 3 — Follow-up (2): promise rejects.** Two valid product choices. (A) **Strict once:** Cache the rejected promise too; future calls get the same rejected promise — no retry. (B) **Retry on failure:** Don't treat rejection as "done"; reset state so the next call runs fn again. So: only set \`called = true\` when the promise **resolves**; on reject, clear state so the next invocation retries.
+
+**Step 4 — Retry-on-failure once (full implementation):**
+
+\`\`\`js
+function onceRetryOnReject(fn) {
+  let result = null;   // cached promise or final value
+  let called = false;  // true only after successful resolution
+  return function (...args) {
+    if (called) return result;
+    if (result === null) {
+      result = fn.apply(this, args);
+    }
+    if (result && typeof result.then === "function") {
+      return result
+        .then((value) => {
+          called = true;
+          result = value; // cache resolved value so next time we return it directly
+          return value;
+        })
+        .catch((err) => {
+          result = null; // allow retry
+          throw err;
+        });
+    }
+    called = true;
+    return result;
+  };
+}
+\`\`\`
+
+**Behavior:** Sync return value: same as sync once. Promise: first call (and any call while the first is in flight) shares the same promise. On **resolve**: we set called = true and cache the resolved value; later calls return that value (or we could keep returning the same resolved promise). On **reject**: we set result = null so the next call runs fn again; we rethrow so the caller still sees the error. **Interview one-liner:** "For async once with retry on failure, we cache the in-flight promise so concurrent callers share it, and we only mark execution complete on resolve; on reject we reset state so the next call retries."`,
     tags: ["once", "closure", "promise", "cache"],
   },
   {
@@ -445,12 +529,45 @@ function throttle(fn, delay) {
     question: `Implement memoize(fn). Cache results by arguments; same arguments return cached result. Preserve this.
 
 Before coding, answer verbally: (1) How will you create a cache key from arguments? (2) Where will the cache be stored? (3) What are the limitations? (JSON.stringify loses types and has object order issues.) **Follow-up:** What if func returns a Promise? Will you cache the promise? What if it rejects?`,
-    solution: `**Cache key:** Don't use JSON.stringify — loses type distinction (1 vs "1"), order issues for objects, fails for functions/symbols/circular refs. **Interview-safe approach:** Nested Map (Map-trie). Each argument is a key; traverse/build path; store result at leaf (e.g. using Symbol('RESULT') so no collision with user args). This preserves types and reference equality for objects.
+    solution: `**Step 1 — Verbal answers (say before coding):**
 
-**Where to store:** In a closure so the cache persists across calls but is private and garbage-collectable when the function is dropped.
+**(1) Cache key:** I won't use JSON.stringify because it loses type distinction (e.g. 1 vs "1" both become "1"), has key-order issues for objects (\`{a:1,b:2}\` vs \`{b:2,a:1}\` can stringify differently), and fails for functions, symbols, and circular references. I'll use a **nested Map (Map-trie)**: each argument is a key; we traverse or build a path of Maps; the result is stored at the leaf using a special key (e.g. a Symbol) so it doesn't collide with user arguments. Map uses SameValueZero for primitives and reference equality for objects, so types and references are preserved.
 
-**Limitations:** (1) Memory growth — cache grows indefinitely. (2) Referential equality — objects compared by reference; {a:1} !== {a:1}. (3) Only pure functions — not safe for I/O, randomness, or time. (4) Cache invalidation is hard. **If func returns a Promise:** Caching the promise is correct; all callers share the same async work. If it rejects, you might want to evict that cache entry so a future call can retry. **Interview summary:** "I'd use a Map-based cache in a closure. For robust memoization I'd avoid stringifying arguments and use nested Maps to preserve type and reference equality. Main limitations are memory growth and the requirement that the function be pure."`,
-    codeSnippet: `// Map-trie: let node = root; for (const arg of args) { if (!node.has(arg)) node.set(arg, new Map()); node = node.get(arg); } then node.set(SYMBOL_RESULT, fn.apply(this, args));`,
+**(2) Where to store:** In a closure. The cache variable lives in the outer function scope so it persists across calls to the memoized function but stays private and can be garbage-collected when the memoized function is no longer referenced.
+
+**(3) Limitations:** (a) Memory grows indefinitely unless we add eviction (e.g. LRU, max size). (b) Arguments are compared by reference for objects — two different objects with the same shape are treated as different keys. (c) Only safe for pure functions; not for I/O, randomness, or time-dependent logic. (d) Cache invalidation is hard (when to clear or update entries).
+
+**Step 2 — Full implementation (Map-trie):**
+
+\`\`\`js
+const RESULT = Symbol("RESULT");
+
+function memoize(fn) {
+  const cache = new Map(); // root of trie
+  return function (...args) {
+    let node = cache;
+    for (const arg of args) {
+      if (!node.has(arg)) {
+        node.set(arg, new Map());
+      }
+      node = node.get(arg);
+    }
+    if (node.has(RESULT)) {
+      return node.get(RESULT);
+    }
+    const result = fn.apply(this, args);
+    node.set(RESULT, result);
+    return result;
+  };
+}
+\`\`\`
+
+**Why Symbol('RESULT'):** We need a key that cannot conflict with any user argument. Symbol is unique and never equals a primitive or another Symbol, so the leaf node can hold both "next level" Maps (for more args) and the result. If we only ever have fixed arity, we could use a single Symbol per depth; for variadic args, one RESULT at the leaf is enough.
+
+**Step 3 — Limitations in practice:** (1) Cache grows unbounded — consider LRU or max size for long-running apps. (2) Referential equality: memoize(fn)({a:1}, {a:1}) runs twice because two different object references. (3) Pure functions only — side effects, Date.now(), Math.random() break correctness. (4) Invalidation — no built-in way to clear by pattern; caller may need a wrapper that exposes a .clear() that resets the cache Map.
+
+**Follow-up — func returns a Promise:** (1) **Do we cache the promise?** Yes. Cache the return value of fn.apply(this, args); if it's a promise, we store that promise. Multiple calls with same args then share the same promise — one network request, same result for all callers. This is desirable for config loading, feature flags, auth bootstrap (same as React Query/SWR). (2) **What if it rejects?** Two designs. (A) **Strict once:** Keep the rejected promise in the cache; future calls get the same rejected promise (no retry). (B) **Retry on reject:** On rejection, evict that cache entry (remove the leaf or the RESULT for that path) so the next call with the same args runs fn again. Implementation: when the cached value is a promise, .catch(() => { evict this path; }) and rethrow, so the entry is removed on reject and the next call will recompute. **Interview one-liner:** "For async memoize we cache the promise so callers share the same in-flight work; if we want retries on failure we evict the cache entry on rejection so the next call retries."`,
+    codeSnippet: `const RESULT = Symbol("RESULT");\nfunction memoize(fn) {\n  const cache = new Map();\n  return function (...args) {\n    let node = cache;\n    for (const arg of args) {\n      if (!node.has(arg)) node.set(arg, new Map());\n      node = node.get(arg);\n    }\n    if (node.has(RESULT)) return node.get(RESULT);\n    const result = fn.apply(this, args);\n    node.set(RESULT, result);\n    return result;\n  };\n}`,
     tags: ["memoize", "cache", "Map", "pure function"],
   },
 
@@ -634,12 +751,41 @@ No empty-array handling. First settlement calls resolve or reject; further settl
     question: `Implement Promise.any. Behavior: resolves with the first **fulfilled** promise; ignores rejections; rejects only if **all** reject, with AggregateError(errors). Example: Promise.any([Promise.reject("a"), Promise.resolve("ok")]).then(console.log) → "ok".
 
 Before coding: How is Promise.any different from Promise.race? What state do we need? When do we reject?`,
-    solution: `**Difference:** Promise.race settles as soon as the first promise settles (fulfill or reject). Promise.any ignores rejections and resolves as soon as the first promise **fulfills**; it only rejects if all reject, then throws AggregateError with all reasons.
+    solution: `**Step 1 — How is Promise.any different from Promise.race?** Promise.race **settles** as soon as the **first** promise settles (fulfill or reject) — so the first rejection wins. Promise.any **ignores** rejections and **resolves** as soon as the first promise **fulfills**; it **rejects** only if **all** promises reject, then with \`AggregateError(errors, message)\`. So: race = "first to finish (success or failure)"; any = "first success, or fail only if all fail."
 
-**State:** Track rejection count, collected errors array, total count. Reject only when rejectedCount === total; then reject(new AggregateError(errors, "All promises were rejected")). Preserve order of errors by index. Empty array → reject immediately with AggregateError([], ...).
+**Step 2 — What state do we need? When do we reject?** We need: (1) \`rejectedCount\` — how many have rejected so far. (2) \`errors\` — array (or object by index) to collect rejection reasons **in input order**. (3) \`total\` — promises.length. We **reject** only when \`rejectedCount === total\`; then \`reject(new AggregateError(errors, "All promises were rejected"))\`. We **resolve** as soon as any promise fulfills — use \`resolve(value)\` in that promise's .then. **Empty array:** Reject immediately with \`AggregateError([], "All promises were rejected")\` (no promise can fulfill).
 
-**Why wait for all rejections in any but not in race?** Promise.any must wait because a fulfillment may still occur later; race is designed to settle as soon as the first promise settles regardless of outcome.`,
-    codeSnippet: `promises.forEach((p, index) => {\n  Promise.resolve(p)\n    .then(resolve)\n    .catch((err) => {\n      errors[index] = err;\n      rejectedCount++;\n      if (rejectedCount === total) reject(new AggregateError(errors, "..."));\n    });\n});`,
+**Step 3 — Full implementation:**
+
+\`\`\`js
+function promiseAny(promises) {
+  return new Promise((resolve, reject) => {
+    if (promises.length === 0) {
+      reject(new AggregateError([], "All promises were rejected"));
+      return;
+    }
+    const errors = [];
+    let rejectedCount = 0;
+    const total = promises.length;
+    promises.forEach((p, index) => {
+      Promise.resolve(p)
+        .then((value) => {
+          resolve(value);
+        })
+        .catch((err) => {
+          errors[index] = err;
+          rejectedCount++;
+          if (rejectedCount === total) {
+            reject(new AggregateError(errors, "All promises were rejected"));
+          }
+        });
+    });
+  });
+}
+\`\`\`
+
+**Explanation:** We wrap each input with Promise.resolve(p) so non-promises and thenables work. On **fulfill**: we call resolve(value) once — the returned promise settles and further fulfillments/rejections are ignored. On **reject**: we store the reason at \`errors[index]\` to preserve order, increment rejectedCount, and reject only when all have rejected with AggregateError(errors, message). **Why preserve order of errors?** So callers can map each error back to the corresponding input (e.g. which request failed). **Why wait for all rejections in any but not in race?** Promise.any must wait because a fulfillment might still occur later; race is designed to settle on the first outcome.`,
+    codeSnippet: `function promiseAny(promises) {\n  if (promises.length === 0) return Promise.reject(new AggregateError([], "All promises were rejected"));\n  const errors = []; let rejectedCount = 0; const total = promises.length;\n  return new Promise((resolve, reject) => {\n    promises.forEach((p, index) => {\n      Promise.resolve(p).then(resolve).catch((err) => {\n        errors[index] = err; rejectedCount++;\n        if (rejectedCount === total) reject(new AggregateError(errors, "All promises were rejected"));\n      });\n    });\n  });\n}`,
     tags: ["Promise.any", "AggregateError", "polyfill"],
   },
   {
@@ -650,9 +796,38 @@ Before coding: How is Promise.any different from Promise.race? What state do we 
     question: `Implement promiseAllSettled(promises). Waits for all to settle; always resolves; returns array of { status: "fulfilled", value } or { status: "rejected", reason }; preserve **input order** (use index, not push).
 
 Common bugs: Empty array must return Promise.resolve([]). Check count === length **inside** .then/.catch (or .finally), not synchronously. Use result[index] = ... to preserve order. Status string is "rejected" not "reject".`,
-    solution: `**State:** Array of results (by index), settled count. Resolve when count === promises.length. Use .finally(() => { count++; if (count === promises.length) resolve(result); }) so both fulfill and reject increment and resolve. **Order:** result[index] = { status: "fulfilled", value } or { status: "rejected", reason }. Empty array: return Promise.resolve([]).
+    solution: `**Step 1 — State and behavior:** We need: (1) \`result\` — array of same length as promises; we write at \`result[index]\` to preserve **input order**. (2) \`count\` — how many promises have settled (fulfill or reject). We **resolve** only when \`count === promises.length\`. We use \`.finally()\` on each promise so that **both** fulfill and reject paths increment count and then check if we're done. **Empty array:** Return \`Promise.resolve([])\` immediately.
 
-**Why preserve order?** Callers rely on positional meaning — each result corresponds to a specific request; losing order breaks the association between requests and outcomes.`,
+**Step 2 — Full implementation:**
+
+\`\`\`js
+function promiseAllSettled(promises) {
+  if (promises.length === 0) {
+    return Promise.resolve([]);
+  }
+  const result = new Array(promises.length);
+  let count = 0;
+  return new Promise((resolve) => {
+    promises.forEach((p, index) => {
+      Promise.resolve(p)
+        .then((value) => {
+          result[index] = { status: "fulfilled", value };
+        })
+        .catch((reason) => {
+          result[index] = { status: "rejected", reason };
+        })
+        .finally(() => {
+          count++;
+          if (count === promises.length) {
+            resolve(result);
+          }
+        });
+    });
+  });
+}
+\`\`\`
+
+**Why result[index] and not push?** So the order of results matches the order of input promises. Callers rely on positional meaning — each result corresponds to a specific request; losing order breaks the association. **Why check count inside .finally?** Because both .then and .catch lead to .finally; we only resolve once when the last promise settles. **Status string:** Use \`"rejected"\` (not \`"reject"\`) to match the spec.`,
     tags: ["Promise.allSettled", "polyfill", "order", "finally"],
   },
   {
@@ -886,9 +1061,29 @@ Common bugs: thisArg must be captured at bind time, not call time. Inside return
     question: `Design an autocomplete (e.g. Google search). Requirements: suggestions as user types; API is expensive; fast and responsive; handle debouncing, caching, race conditions, loading & error states.
 
 High-level: main pieces? Immediate problems? Then: (1) How prevent stale results when multiple requests in flight? (2) If API is very slow? (3) How limit cache size? (4) Keyboard nav: where store highlighted index? How reduce re-renders? What accessibility?`,
-    solution: `**Main pieces:** Input component (query state); Debounce layer (e.g. 300ms inactivity); Cache (Map: query → suggestions); Network layer (fetch, errors, retries); Suggestion list UI (loading, empty); **Race-condition guard** (request ID or AbortController).
+    solution: `**High-level — main pieces:** (1) **Input** — controlled component, query state, onChange triggers debounced fetch. (2) **Debounce layer** — e.g. 300ms after last keystroke before calling API; reduces request volume. (3) **Cache** — Map (or object): query string → suggestions array; avoid duplicate requests for same query. (4) **Network layer** — fetch with error handling, optional retry. (5) **Suggestion list UI** — loading spinner, empty state, list of options. (6) **Race-condition guard** — ensure only the latest response updates UI (request ID or AbortController).
 
-**Problems:** Race conditions (request 1 returns after request 3 → stale UI); too many requests; loading/empty states; error handling. **Stale results:** Request ID — increment per request, only update UI if response ID === latest ID. Or AbortController — cancel previous request when new one starts. **Slow API:** Stale-while-revalidate — show cached result immediately, show loading for fresh data, update when response arrives (SWR, React Query pattern). **Cache size:** Cap size, evict with LRU (most recently used stay). **Keyboard nav:** Store highlighted index in state (or useRef for no re-render on arrow key). Reduce re-renders: split Input and SuggestionList, React.memo list items, useCallback for handlers. **Accessibility:** ARIA roles (combobox, listbox, option), aria-activedescendant, full keyboard (↑↓ Enter Esc). **Summary:** Debounce input, cache results, guard races with request ID or AbortController, stale-while-revalidate for slow API, LRU for cache limit, ARIA and keyboard for a11y.`,
+**Immediate problems:** (a) Race conditions — user types "a", "ab", "abc"; request for "a" may return after "abc"; we must not show "a" results when current query is "abc". (b) Too many requests — need debounce and cache. (c) Loading and empty states — show feedback while fetching and when no results. (d) Error state — show message and optionally retry.
+
+**Step 1 — (1) How prevent stale results when multiple requests in flight?**
+
+**Option A — Request ID:** Maintain a counter \`requestId\`; on every new debounced request, do \`requestId++\` and capture \`const currentId = requestId\`. When the response arrives, only update state if \`currentId === requestId\`. So if the user typed again, requestId has moved on and we ignore the old response. **Option B — AbortController:** Create an AbortController per request; when starting a new request, call \`previousController.abort()\` and create a new one. Pass \`signal\` to fetch. The previous request is cancelled; when it "completes" (aborted), ignore the result. Only the latest request's response is used. **Interview one-liner:** "We either track a request ID and only apply the response if it matches the latest ID, or we cancel the previous request with AbortController so only the latest response matters."
+
+**Step 2 — (2) If API is very slow?**
+
+**Stale-while-revalidate:** If we have a **cached** result for the current query, show it immediately (or show it with a "refreshing" indicator). In parallel, fire the API request; when it returns, update the UI with fresh data. So the user sees something fast (cached) and then an update. This is the SWR / React Query pattern. **Optional:** Show a loading indicator only when there is no cache; when there is cache, show cache + subtle loading (e.g. shimmer on list). **One-liner:** "Show cached suggestions immediately if available, then revalidate in the background and update when the API returns."
+
+**Step 3 — (3) How limit cache size?**
+
+**LRU (Least Recently Used):** Cap the number of cached entries (e.g. 100). When adding a new entry and the cache is full, evict the **least recently used** entry (the one that wasn't read or written longest). Implementation: use a Map (insertion order = access order if we delete and re-set on read) or a dedicated LRU structure (linked list + map). On cache hit, move the entry to "most recently used" (re-insert or update timestamp). **Alternative:** Simple max size — when over limit, delete oldest entry by insertion order (Map keys/entries order). **One-liner:** "Cap cache size and evict least recently used entries when full; use a Map with re-insert on read to maintain access order, or an LRU structure."
+
+**Step 4 — (4) Keyboard nav: where store highlighted index? How reduce re-renders? What accessibility?**
+
+**Where store highlighted index:** In React, store in **state** (e.g. \`highlightedIndex\`) so the UI updates when the user presses ↑/↓. If we want to avoid re-renders on every arrow key, we can use **useRef** for the index and only update state when selection changes in a way that affects scroll (e.g. need to scroll list into view) or when the user commits (Enter). For simplicity, state is fine; for very large lists, ref + selective state updates can reduce re-renders.
+
+**Reduce re-renders:** (a) **Split components** — keep Input and query state in a parent; pass suggestions and handlers to a SuggestionList. So typing only re-renders what needs to. (b) **React.memo** on the list and on each suggestion item so they only re-render when their props change. (c) **useCallback** for handlers (onSelect, onKeyDown) so stable references and memoized children don't re-render unnecessarily. (d) **Virtualization** if the list is huge (render only visible items).
+
+**Accessibility:** (a) **Roles:** Container: \`role="combobox"\`, \`aria-expanded="true/false"\`, \`aria-controls="suggestions-id"\`, \`aria-activedescendant="option-id-2"\` (point to the currently highlighted option). List: \`role="listbox"\`, \`id="suggestions-id"\`. Each option: \`role="option"\`, \`id="option-id-0"\`, etc. (b) **Keyboard:** Arrow Down/Up move highlightedIndex and update aria-activedescendant; Enter selects the highlighted option and closes the list; Escape closes the list and clears highlight. (c) **Focus:** When opening the list, move focus to the combobox (or keep it there) and set aria-activedescendant to the first option; screen readers announce the active option. **One-liner:** "Store highlighted index in state (or ref for fewer re-renders); reduce re-renders with component split, React.memo, and useCallback; use combobox/listbox/option roles, aria-activedescendant, and full keyboard support for a11y."`,
     tags: ["autocomplete", "debounce", "cache", "race condition", "a11y"],
   },
   {
@@ -899,7 +1094,27 @@ High-level: main pieces? Immediate problems? Then: (1) How prevent stale results
     question: `Design a feed (Twitter/Instagram style). Requirements: load content as user scrolls; handle fast scrolling; avoid duplicate requests; slow network; preserve scroll position; performant on large lists.
 
 High-level: main components (UI, state, data flow, network)? Key technical challenges?`,
-    solution: `**UI/components:** FeedContainer (data fetching, cursor, loading/error); FeedList (items + sentinel at bottom); FeedItem (memoized); LoadTrigger/sentinel (invisible div at bottom, observed by IntersectionObserver). **State:** items (array); cursor/pageToken (next page); isLoading (prevent parallel fetches); hasMore; error. **Data flow:** User scrolls → sentinel enters viewport → IntersectionObserver fires → fetch next page (if !isLoading && hasMore) → append items, update cursor. **Key challenges:** Avoid duplicate requests (isLoading guard, cursor); handle fast scroll (debounce or throttle observer callback); preserve scroll position (don’t scroll jump when appending — use stable item keys, add to end); performance (virtualization for very long lists, React.memo for items). Use IntersectionObserver, not scroll events.`,
+    solution: `**Step 1 — High-level: main components**
+
+**UI/components:** (1) **FeedContainer** — holds state (items, cursor, isLoading, hasMore, error) and data-fetching logic. (2) **FeedList** — renders the list of items plus a **sentinel** (invisible div or placeholder) at the bottom. (3) **FeedItem** — single item; should be **React.memo** so only changed items re-render. (4) **LoadTrigger / sentinel** — a div at the end of the list that we observe with **IntersectionObserver**; when it enters the viewport, we trigger the next page load.
+
+**State:** \`items\` (array of feed items); \`cursor\` or \`pageToken\` (opaque token from the API for the next page); \`isLoading\` (boolean — prevent parallel fetches); \`hasMore\` (boolean — stop when no more pages); \`error\` (for error UI and retry).
+
+**Data flow:** User scrolls down → sentinel enters viewport → IntersectionObserver callback fires → if \`!isLoading && hasMore\`, call \`fetchNextPage()\` → set \`isLoading = true\`, request with \`cursor\` → on success: append new items to \`items\`, update \`cursor\` from response, set \`isLoading = false\`; on failure: set \`error\`, set \`isLoading = false\`. Use **IntersectionObserver**, not scroll events (more efficient and simpler).
+
+**Step 2 — Key technical challenges**
+
+**(1) Avoid duplicate requests:** (a) **isLoading guard** — before fetching, check \`if (isLoading || !hasMore) return;\`; set \`isLoading = true\` when starting the request and \`false\` when done. So even if the observer fires multiple times (e.g. fast scroll), only one request runs. (b) **Cursor** — backend returns \`nextCursor\`; frontend sends it for the next page so the server knows where to continue; no duplicate or overlapping items.
+
+**(2) Handle fast scrolling:** The observer can fire repeatedly as the user scrolls. The \`isLoading\` guard prevents parallel requests. Optionally **debounce or throttle** the observer callback so we don't re-check too often, but usually the guard is enough.
+
+**(3) Preserve scroll position:** When we append items at the bottom, we must not cause a **scroll jump**. Use **stable keys** (e.g. \`item.id\`) and **append** to the list (don't replace or reorder the whole list). The browser keeps scroll position when new content is added at the bottom. Avoid measuring scrollTop and restoring it unless we're doing something special (e.g. restore after navigation).
+
+**(4) Slow network:** Show **loading** indicator at the bottom while fetching; optionally **skeleton** placeholders. On **error**, show message and retry button. Don't block the existing list — user can keep scrolling existing content.
+
+**(5) Performant on large lists:** (a) **React.memo** on FeedItem so only changed items re-render. (b) **Virtualization** — if the list has thousands of items, only render what's in view (e.g. react-window, react-virtualized); otherwise DOM nodes and re-renders become expensive. (c) **Stable keys** — \`key={item.id}\` so reconciliation is efficient.
+
+**Interview one-liner:** "Use a sentinel at the bottom with IntersectionObserver to trigger the next fetch; guard with isLoading and cursor to avoid duplicates; append with stable keys to preserve scroll; use React.memo and virtualization for performance."`,
     tags: ["infinite scroll", "IntersectionObserver", "pagination", "virtualization"],
   },
   {

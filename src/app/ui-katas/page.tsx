@@ -716,13 +716,13 @@ export default function UIKatas() {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "beginner":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-emerald-950/50 text-emerald-300 border-emerald-800";
       case "intermediate":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-amber-950/50 text-amber-300 border-amber-800";
       case "advanced":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-rose-950/50 text-rose-300 border-rose-800";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-slate-800 text-slate-200 border-slate-600";
     }
   };
 
@@ -751,28 +751,28 @@ export default function UIKatas() {
   const totalCompleted = completedKatas.size;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-green-50">
+    <div className="min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">UI Katas</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold text-slate-100">UI Katas</h1>
+            <p className="text-slate-400 mt-1">
               Build Complex Components from Specs
             </p>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Target className="w-5 h-5 text-green-600" aria-hidden />
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-slate-100">
               {totalCompleted}/{katas.length}
             </span>
-            <span className="text-gray-500">completed</span>
+            <span className="text-slate-500">completed</span>
           </div>
         </header>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Katas List */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            <div className="bg-slate-900/80 rounded-xl border border-slate-700 p-6">
+              <h2 className="text-xl font-semibold text-slate-100 mb-6">
                 Available Katas
               </h2>
               <div className="space-y-4">
@@ -781,19 +781,19 @@ export default function UIKatas() {
                     key={kata.id}
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       selectedKata === kata.id
-                        ? "border-green-500 bg-green-50"
-                        : "border-gray-200 hover:border-gray-300"
+                        ? "border-green-500 bg-emerald-950/30"
+                        : "border-slate-700 hover:border-slate-600"
                     }`}
                     onClick={() => setSelectedKata(kata.id)}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium text-gray-900">
+                      <h3 className="font-medium text-slate-100">
                         {kata.title}
                       </h3>
                       {completedKatas.has(kata.id) ? (
                         <CheckCircle className="w-5 h-5 text-green-500" />
                       ) : (
-                        <Circle className="w-5 h-5 text-gray-400" />
+                        <Circle className="w-5 h-5 text-slate-500" />
                       )}
                     </div>
                     <div className="flex items-center space-x-2 mb-2">
@@ -804,16 +804,16 @@ export default function UIKatas() {
                       >
                         {kata.difficulty}
                       </span>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-slate-500">
                         • {kata.estimatedTime}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-slate-400 mb-2">
                       {kata.description}
                     </p>
                     <div className="flex items-center space-x-1">
                       {getCategoryIcon(kata.category)}
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-slate-500">
                         {kata.category}
                       </span>
                     </div>
@@ -825,21 +825,21 @@ export default function UIKatas() {
 
           {/* Kata Details */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="bg-slate-900/80 rounded-xl border border-slate-700 p-6">
               {selectedKataData && (
                 <>
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">
+                      <h2 className="text-2xl font-bold text-slate-100">
                         {selectedKataData.title}
                       </h2>
-                      <p className="text-gray-600 mt-1">
+                      <p className="text-slate-400 mt-1">
                         {selectedKataData.description}
                       </p>
                     </div>
                     <div className="flex items-center space-x-4">
                       <div className="text-center">
-                        <div className="text-sm text-gray-500">Difficulty</div>
+                        <div className="text-sm text-slate-500">Difficulty</div>
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getDifficultyColor(
                             selectedKataData.difficulty
@@ -849,8 +849,8 @@ export default function UIKatas() {
                         </span>
                       </div>
                       <div className="text-center">
-                        <div className="text-sm text-gray-500">Time</div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="text-sm text-slate-500">Time</div>
+                        <div className="font-semibold text-slate-100">
                           {selectedKataData.estimatedTime}
                         </div>
                       </div>
@@ -860,7 +860,7 @@ export default function UIKatas() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Requirements */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                      <h3 className="text-lg font-semibold text-slate-100 mb-3">
                         Core Requirements
                       </h3>
                       <ul className="space-y-2">
@@ -870,7 +870,7 @@ export default function UIKatas() {
                             className="flex items-start space-x-2"
                           >
                             <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <span className="text-sm text-gray-600">{req}</span>
+                            <span className="text-sm text-slate-400">{req}</span>
                           </li>
                         ))}
                       </ul>
@@ -878,7 +878,7 @@ export default function UIKatas() {
 
                     {/* Bonus Features */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                      <h3 className="text-lg font-semibold text-slate-100 mb-3">
                         Bonus Features
                       </h3>
                       <ul className="space-y-2">
@@ -889,7 +889,7 @@ export default function UIKatas() {
                               className="flex items-start space-x-2"
                             >
                               <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                              <span className="text-sm text-gray-600">
+                              <span className="text-sm text-slate-400">
                                 {feature}
                               </span>
                             </li>
@@ -900,15 +900,15 @@ export default function UIKatas() {
                   </div>
 
                   {/* Tech Stack */}
-                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">
+                  <div className="mt-6 p-4 bg-slate-800/80 rounded-lg border border-slate-700">
+                    <h4 className="font-medium text-slate-100 mb-2">
                       Recommended Tech Stack
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedKataData.techStack.map((tech, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1 bg-white border border-gray-200 rounded-full text-sm text-gray-700"
+                          className="px-3 py-1 bg-slate-800 border border-slate-600 rounded-full text-sm text-slate-300"
                         >
                           {tech}
                         </span>
@@ -942,8 +942,8 @@ export default function UIKatas() {
 
         {/* Progress Overview */}
         <div className="mt-8">
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          <div className="bg-slate-900/80 rounded-xl border border-slate-700 p-6">
+            <h2 className="text-xl font-semibold text-slate-100 mb-6">
               Progress Overview
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -957,10 +957,10 @@ export default function UIKatas() {
                 return (
                   <div key={difficulty} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium text-gray-900 capitalize">
+                      <h3 className="font-medium text-slate-100 capitalize">
                         {difficulty}
                       </h3>
-                      <span className="text-sm font-medium text-gray-500">
+                      <span className="text-sm font-medium text-slate-500">
                         {completed}/{difficultyKatas.length}
                       </span>
                     </div>

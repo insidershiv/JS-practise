@@ -162,14 +162,14 @@ export function InterviewPanel({
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div className="flex items-center gap-2">
-            <MessageCircle className="w-5 h-5 text-indigo-600" />
+            <MessageCircle className="w-5 h-5 text-green-600" />
             <h2 className="font-semibold text-slate-900">Practice with AI</h2>
           </div>
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={onClose}
-              className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               title="Close and pick another question"
             >
               <RotateCcw className="w-4 h-4" />
@@ -178,7 +178,7 @@ export function InterviewPanel({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               aria-label="Close panel"
             >
               <X className="w-5 h-5" />
@@ -210,7 +210,7 @@ export function InterviewPanel({
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                   m.role === "user"
-                    ? "bg-indigo-600 text-white"
+                    ? "bg-green-600 text-white"
                     : "bg-slate-100 text-slate-800"
                 }`}
               >
@@ -252,7 +252,7 @@ export function InterviewPanel({
               }}
               placeholder="Type your answer…"
               rows={2}
-              className="flex-1 resize-none rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-60"
+              className="flex-1 resize-none rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60"
               disabled={loading || !question}
               aria-label="Your answer"
             />
@@ -260,7 +260,7 @@ export function InterviewPanel({
               <button
                 type="button"
                 onClick={listening ? stopVoiceInput : startVoiceInput}
-                className={`rounded-xl p-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
+                className={`rounded-xl p-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 ${
                   listening
                     ? "bg-rose-100 text-rose-700 hover:bg-rose-200"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -274,7 +274,7 @@ export function InterviewPanel({
                 type="button"
                 onClick={sendMessage}
                 disabled={loading || !input.trim() || !question}
-                className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
                 aria-label="Send"
               >
                 {loading ? (

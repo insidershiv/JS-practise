@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "version": 1,
+    "description": "Local JSON source — replace with Firebase fetch later. User progress keys: completedIds, lastOpenedId."
+  },
+  "topics": [
+    { "id": "closure", "label": "Closure" },
+    { "id": "async", "label": "Async" },
+    { "id": "array", "label": "Array" },
+    { "id": "dom", "label": "DOM" },
+    { "id": "react-hooks", "label": "React Hooks" },
+    { "id": "recursion", "label": "Recursion" }
+  ],
+  "questions": [
+    {
+      "id": "debounce",
+      "title": "Debounce",
+      "shortDescription": "Implement debounce(fn, delay) — run fn only after delay ms of inactivity.",
+      "description": "Debouncing delays execution until a period of **inactivity** has passed. Example: search input — wait until the user stops typing before firing the API.\n\nImplement a `debounce` function that accepts a callback `fn` and a `wait` duration in milliseconds. The returned function should preserve `this` and arguments when `fn` is eventually called.",
+      "difficulty": "medium",
+      "category": "javascript-functions",
+      "format": "coding",
+      "languages": ["javascript", "typescript"],
+      "estimatedMinutes": 15,
+      "doneCountLabel": "17.7k done",
+      "topics": ["closure", "async"],
+      "warmUp": false,
+      "starterCode": "/**\n * @param {Function} fn\n * @param {number} delay\n * @returns {Function}\n */\nfunction debounce(fn, delay) {\n  // Your code here\n}\n",
+      "solutionCode": "function debounce(fn, delay) {\n  let timerId;\n  return function (...args) {\n    const ctx = this;\n    clearTimeout(timerId);\n    timerId = setTimeout(() => fn.apply(ctx, args), delay);\n  };\n}\n",
+      "tests": [
+        {
+          "name": "returns a function",
+          "code": "if (typeof debounce(() => {}, 100) !== 'function') throw new Error('debounce must return a function');"
+        },
+        {
+          "name": "calls fn after delay (single call)",
+          "code": "return new Promise((resolve, reject) => {\n  let calls = 0;\n  const fn = () => { calls++; };\n  const d = debounce(fn, 50);\n  d();\n  setTimeout(() => {\n    if (calls !== 1) reject(new Error('Expected 1 call after 50ms, got ' + calls));\n    else resolve();\n  }, 80);\n});"
+        },
+        {
+          "name": "resets timer on rapid calls",
+          "code": "return new Promise((resolve, reject) => {\n  let calls = 0;\n  const fn = () => { calls++; };\n  const d = debounce(fn, 60);\n  d(); d(); d();\n  setTimeout(() => {\n    if (calls !== 1) reject(new Error('Expected 1 call after bursts, got ' + calls));\n    else resolve();\n  }, 120);\n});"
+        }
+      ]
+    },
+    {
+      "id": "counter",
+      "title": "Counter",
+      "shortDescription": "Build state that increments when a function is called.",
+      "description": "Implement `createCounter()` that returns an object `{ increment, getValue }`.\n\n- `increment()` adds 1 to an internal counter.\n- `getValue()` returns the current count.\n\nUse a closure so the count is private.",
+      "difficulty": "easy",
+      "category": "javascript-functions",
+      "format": "coding",
+      "languages": ["javascript", "typescript"],
+      "estimatedMinutes": 10,
+      "doneCountLabel": "41.7k done",
+      "topics": ["closure"],
+      "warmUp": true,
+      "starterCode": "function createCounter() {\n  // Your code here\n}\n",
+      "solutionCode": "function createCounter() {\n  let n = 0;\n  return {\n    increment() { n++; },\n    getValue() { return n; },\n  };\n}\n",
+      "tests": [
+        {
+          "name": "starts at 0",
+          "code": "const c = createCounter();\nif (c.getValue() !== 0) throw new Error('Expected 0');"
+        },
+        {
+          "name": "increments",
+          "code": "const c = createCounter();\nc.increment();\nc.increment();\nif (c.getValue() !== 2) throw new Error('Expected 2');"
+        }
+      ]
+    },
+    {
+      "id": "flatten-array",
+      "title": "Flatten",
+      "shortDescription": "Flatten a nested array by one level.",
+      "description": "Implement `flattenOnce(arr)` where `arr` may contain numbers or nested arrays of numbers. Return a new array with one level of nesting removed.\n\nExample: `[1, [2, 3], 4]` → `[1, 2, 3, 4]`",
+      "difficulty": "easy",
+      "category": "algorithmic-coding",
+      "format": "coding",
+      "languages": ["javascript", "typescript"],
+      "estimatedMinutes": 12,
+      "doneCountLabel": "12k done",
+      "topics": ["array", "recursion"],
+      "warmUp": false,
+      "starterCode": "/**\n * @param {Array<number|number[]>} arr\n * @returns {number[]}\n */\nfunction flattenOnce(arr) {\n  // Your code here\n}\n",
+      "solutionCode": "function flattenOnce(arr) {\n  const out = [];\n  for (const x of arr) {\n    if (Array.isArray(x)) out.push(...x);\n    else out.push(x);\n  }\n  return out;\n}\n",
+      "tests": [
+        {
+          "name": "empty",
+          "code": "if (JSON.stringify(flattenOnce([])) !== '[]') throw new Error('empty');"
+        },
+        {
+          "name": "mixed",
+          "code": "const r = flattenOnce([1, [2, 3], 4]);\nif (JSON.stringify(r) !== '[1,2,3,4]') throw new Error('wrong: ' + JSON.stringify(r));"
+        }
+      ]
+    }
+  ]
+}

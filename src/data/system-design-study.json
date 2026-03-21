@@ -1,0 +1,70 @@
+{
+  "intro": "Frontend system design interviews ask you to architect **large-scale web applications**: data flow, caching, performance, real-time features, and trade-offs. Use the sections below to study concepts before drilling the practice prompts.",
+  "sections": [
+    {
+      "id": "framework",
+      "title": "How to answer a system design question",
+      "points": [
+        "Clarify requirements: functional, scale (users, data), latency, consistency.",
+        "Sketch high-level: client → CDN / edge → API / BFF → services → data stores.",
+        "Deep-dive on 2–3 areas: e.g. state, caching, real-time, or media.",
+        "Call out trade-offs: consistency vs availability, complexity vs speed to ship.",
+        "Discuss failure modes: retries, idempotency, graceful degradation."
+      ]
+    },
+    {
+      "id": "cap",
+      "title": "CAP & consistency (know the basics)",
+      "points": [
+        "**C**onsistency, **A**vailability, **P**artition tolerance — in a network partition you often choose between C and A.",
+        "Strong consistency: everyone reads the latest write (often higher latency).",
+        "Eventual consistency: reads may lag (better for global scale, feeds, analytics).",
+        "For UIs: optimistic updates + reconciliation are common; pair with versioning or CRDTs when conflicts matter."
+      ]
+    },
+    {
+      "id": "scale",
+      "title": "Scaling & load",
+      "points": [
+        "**Load balancers** distribute traffic (L4 vs L7); health checks and sticky sessions when needed.",
+        "**Horizontal scaling**: stateless app servers behind LB; session in Redis or JWT.",
+        "**CDN** for static assets + edge caching; cache invalidation strategies (TTL, purge, versioned URLs).",
+        "**Rate limiting** at edge/gateway to protect origin APIs."
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data & caching layers",
+      "points": [
+        "**Browser**: HTTP cache, service workers, IndexedDB for offline.",
+        "**Application cache**: Redis/Memcached for hot keys, session, rate-limit counters.",
+        "**Database**: SQL for relational integrity; NoSQL for flexible schemas or huge scale (with trade-offs).",
+        "**Invalidation**: write-through vs write-back; stale-while-revalidate for read-heavy UIs (SWR/React Query patterns)."
+      ]
+    },
+    {
+      "id": "async",
+      "title": "Async, queues & real-time",
+      "points": [
+        "**Message queues** (Kafka, SQS, RabbitMQ) decouple producers/consumers and absorb spikes.",
+        "**WebSockets** or **SSE** for live updates; fall back to polling where needed.",
+        "**Idempotency keys** for retried writes; **outbox pattern** for reliable side effects."
+      ]
+    },
+    {
+      "id": "fe-specific",
+      "title": "Frontend-specific architecture",
+      "points": [
+        "**Rendering**: SSR/SSG/ISR vs CSR — SEO, TTFB, personalization, cost.",
+        "**Code splitting & bundling**: route-based chunks, lazy routes, Core Web Vitals (LCP, INP, CLS).",
+        "**Design systems & micro-frontends**: boundaries, shared contracts, independent deploys.",
+        "**Observability**: RUM, error tracking, feature flags, safe rollouts."
+      ]
+    }
+  ],
+  "readings": [
+    { "label": "Next.js — Rendering strategies", "href": "https://nextjs.org/docs/app/building-your-application/rendering" },
+    { "label": "Web.dev — Performance", "href": "https://web.dev/performance/" },
+    { "label": "Martin Fowler — CQRS", "href": "https://martinfowler.com/bliki/CQRS.html" }
+  ]
+}

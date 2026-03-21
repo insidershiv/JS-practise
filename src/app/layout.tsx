@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AppNav } from "./components/AppNav";
-import { AppFooter } from "./components/AppFooter";
+import { AppShell } from "./components/AppShell";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Senior Frontend Interview Prep",
-    template: "%s | Interview Prep",
+    default: "FrontPrep — Frontend Interview Prep",
+    template: "%s | FrontPrep",
   },
   description:
     "8-week roadmap for senior frontend and React Native engineers: DSA, UI katas, system design, React/RN depth, and behavioral prep.",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({
@@ -42,21 +42,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased min-h-screen flex flex-col bg-[var(--background)] text-[var(--foreground)]`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased min-h-screen bg-[var(--shell-bg)] text-[var(--shell-fg)]`}
       >
         <a
           href="#main-content"
-          className="absolute -left-[9999px] top-4 z-[100] px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium focus:left-4 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600"
+          className="absolute -left-[9999px] top-4 z-[100] rounded-lg bg-green-600 px-4 py-2 font-medium text-zinc-950 focus:left-4 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-zinc-950"
         >
           Skip to main content
         </a>
-        <AppNav />
-        <main id="main-content" className="flex-1">
-          {children}
-        </main>
-        <AppFooter />
+        <ThemeProvider defaultTheme="dark">
+          <AppShell>
+            <main id="main-content" className="min-h-0 flex-1 bg-[var(--shell-content)]">
+              {children}
+            </main>
+          </AppShell>
+        </ThemeProvider>
       </body>
     </html>
   );

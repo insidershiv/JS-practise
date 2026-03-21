@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend Interview Prep
 
-## Getting Started
+A Next.js app for senior frontend interview preparation: **roadmap**, **coding practice with an in-browser IDE** (Monaco Editor + tests), **UI katas**, **system design**, **FEI-style Q&A**, and **AI practice** (OpenAI).
 
-First, run the development server:
+## Features
+
+| Area | Route | Notes |
+|------|--------|--------|
+| **8-week roadmap** | `/` | Weekly plan, topics, links to resources |
+| **Practice (IDE)** | `/practice` | Question bank from JSON; split view (description / solution + Monaco editor + run tests) |
+| **Coding catalog** | `/coding` | Large problem list (local state) |
+| **UI katas** | `/ui-katas` | Implementation prompts |
+| **System design** | `/system-design` | Prompts & study notes |
+| **From my interview** | `/fei-questions` | Curated Q&A + optional **Practice with AI** (needs `OPENAI_API_KEY`) |
+
+### Practice IDE (`/practice`)
+
+- **Monaco Editor** (VS Code engine): syntax highlighting, **IntelliSense / suggestions** while typing, formatting.
+- **Automated tests** run in the browser via a small runner (`src/lib/runCode.ts`).
+- **Progress** is stored in `localStorage` under `practice-completed-ids` until you move to Firebase.
+
+### Data: JSON → Firebase (planned)
+
+- Question bank: **`src/data/practice-questions.json`**
+- Shape is defined in **`src/types/practice.ts`**
+- Loader: **`src/lib/practiceQuestions.ts`** — replace `import practiceData from ...json` with a `fetch` to Firestore / your API when ready.
+- Placeholder: **`src/lib/firebase.ts`** (Google Auth + Firestore sync TBD).
+
+### Environment
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
+# Add OPENAI_API_KEY for /fei-questions "Practice with AI"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Never commit `.env.local`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build
+npm run start
+npm run lint
+```
 
-## Learn More
+## Tech stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js 15** (App Router), **React 19**, **TypeScript**
+- **Tailwind CSS v4**
+- **Monaco Editor** (`@monaco-editor/react`, `monaco-editor`)
+- **OpenAI** (server route `src/app/api/interview/route.ts`)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure (high level)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+  app/
+    layout.tsx              # Root layout + AppShell (sidebar)
+    page.tsx                # Roadmap home
+    practice/
+      page.tsx              # Question list + filters
+      [id]/page.tsx         # Single question + IDE
+      components/
+        CodePlayground.tsx  # Monaco (client, dynamic import)
+        PracticeWorkspace.tsx
+    fei-questions/          # Q&A + InterviewPanel
+    api/interview/          # Streaming + non-streaming AI chat
+  data/
+    practice-questions.json # Replace with API/Firestore later
+    fei-questions.ts
+  lib/
+    practiceQuestions.ts
+    runCode.ts
+    firebase.ts             # Stub
+  types/
+    practice.ts
+```
 
-## Deploy on Vercel
+## Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Use a patched **Next.js** version (see Netlify/Vercel security advisories). Set env vars on the host; for AI features, add `OPENAI_API_KEY` to the deployment environment.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Security note
+
+Do **not** paste API tokens or keys into chat or commit them. Use host secrets / `.env.local` only.
+
+## License
+
+Private / personal use unless you add a license.

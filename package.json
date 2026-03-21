@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "monaco-editor": "^0.52.0",
     "lucide-react": "^0.542.0",
     "openai": "^4.73.0",
     "next": "15.5.7",

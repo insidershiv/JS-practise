@@ -26,20 +26,20 @@ const DIFFICULTY_STYLES: Record<
   FEIDifficulty,
   { bg: string; text: string; border: string }
 > = {
-  easy: { bg: "bg-emerald-50", text: "text-emerald-800", border: "border-emerald-200" },
-  medium: { bg: "bg-amber-50", text: "text-amber-800", border: "border-amber-200" },
-  hard: { bg: "bg-rose-50", text: "text-rose-800", border: "border-rose-200" },
+  easy: { bg: "bg-emerald-950/40", text: "text-emerald-300", border: "border-emerald-800" },
+  medium: { bg: "bg-amber-950/40", text: "text-amber-300", border: "border-amber-800" },
+  hard: { bg: "bg-rose-950/40", text: "text-rose-300", border: "border-rose-800" },
 };
 
 const SECTION_COLORS: Record<FEISection, string> = {
-  "core-js": "bg-blue-100 text-blue-800 border-blue-200",
-  "js-utilities": "bg-violet-100 text-violet-800 border-violet-200",
-  promises: "bg-cyan-100 text-cyan-800 border-cyan-200",
-  "dom-browser": "bg-green-100 text-green-800 border-green-200",
-  react: "bg-sky-100 text-sky-800 border-sky-200",
-  concepts: "bg-slate-100 text-slate-800 border-slate-200",
-  "system-design": "bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200",
-  "event-loop": "bg-amber-100 text-amber-800 border-amber-200",
+  "core-js": "bg-blue-950/40 text-blue-300 border-blue-800",
+  "js-utilities": "bg-violet-950/40 text-violet-300 border-violet-800",
+  promises: "bg-cyan-950/40 text-cyan-300 border-cyan-800",
+  "dom-browser": "bg-emerald-950/40 text-emerald-300 border-emerald-800",
+  react: "bg-sky-950/40 text-sky-300 border-sky-800",
+  concepts: "bg-slate-800/50 text-slate-200 border-slate-700",
+  "system-design": "bg-fuchsia-950/40 text-fuchsia-300 border-fuchsia-800",
+  "event-loop": "bg-amber-950/40 text-amber-300 border-amber-800",
 };
 
 const STORAGE_KEY = "fei-questions-practiced";
@@ -104,13 +104,13 @@ export default function FEIQuestionsPage() {
   }, [practiced]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-full">
       {/* Page header */}
-      <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+      <header className="sticky top-0 z-10 border-b border-slate-700/80 bg-slate-900/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-100">
                 From My Interview
               </h1>
               <p className="text-sm text-slate-500 mt-0.5">
@@ -119,12 +119,12 @@ export default function FEIQuestionsPage() {
             </div>
             <div className="flex items-center gap-2 text-sm" aria-label={`Practiced ${stats.done} of ${stats.total} questions`}>
               <span className="text-slate-500">Practiced</span>
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-slate-100">
                 {stats.done}/{stats.total}
               </span>
-              <div className="w-16 h-2 rounded-full bg-slate-200 overflow-hidden" role="progressbar" aria-valuenow={stats.pct} aria-valuemin={0} aria-valuemax={100}>
+              <div className="w-16 h-2 rounded-full bg-slate-700 overflow-hidden" role="progressbar" aria-valuenow={stats.pct} aria-valuemin={0} aria-valuemax={100}>
                 <div
-                  className="h-full rounded-full bg-indigo-500 transition-all duration-300"
+                  className="h-full rounded-full bg-green-500 transition-all duration-300"
                   style={{ width: `${stats.pct}%` }}
                 />
               </div>
@@ -136,14 +136,14 @@ export default function FEIQuestionsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Filters */}
         <div className="mb-6 space-y-4">
-          <div className="flex flex-wrap items-center gap-2 text-slate-600">
+          <div className="flex flex-wrap items-center gap-2 text-slate-400">
             <Search className="w-4 h-4" />
             <input
               type="text"
               placeholder="Search by title, question, or tag..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 min-w-[200px] px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="flex-1 min-w-[200px] px-3 py-2 rounded-lg border border-slate-600 bg-slate-900 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -154,7 +154,7 @@ export default function FEIQuestionsPage() {
             <select
               value={sectionFilter}
               onChange={(e) => setSectionFilter(e.target.value as FEISection | "all")}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-3 py-1.5 rounded-lg border border-slate-600 bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="all">All sections</option>
               {(Object.entries(FEI_SECTIONS) as [FEISection, typeof FEI_SECTIONS[FEISection]][]).map(
@@ -175,7 +175,7 @@ export default function FEIQuestionsPage() {
                     ? d === "all"
                       ? "bg-slate-800 text-white"
                       : `${DIFFICULTY_STYLES[d as FEIDifficulty].bg} ${DIFFICULTY_STYLES[d as FEIDifficulty].text} border ${DIFFICULTY_STYLES[d as FEIDifficulty].border}`
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                 }`}
               >
                 {d === "all" ? "All" : d.charAt(0).toUpperCase() + d.slice(1)}
@@ -268,7 +268,10 @@ function QuestionBody({ text }: { text: string }) {
         part.type === "code" ? (
           <CodeBlock key={i} code={part.content} />
         ) : (
-          <p key={i} className="whitespace-pre-wrap text-slate-800 text-sm leading-relaxed">
+          <p
+            key={i}
+            className="whitespace-pre-wrap text-slate-200 text-sm leading-relaxed"
+          >
             {part.content.trim()}
           </p>
         )
@@ -306,9 +309,9 @@ function SolutionParagraphs({ text }: { text: string }) {
         );
         if (isList && lines.length > 0) {
           return (
-            <ul key={i} className="list-disc list-inside mb-2 space-y-1 ml-1">
+            <ul key={i} className="list-disc list-inside mb-2 space-y-1 ml-1 text-slate-200">
               {lines.map((line, j) => (
-                <li key={j} className="leading-relaxed">
+                <li key={j} className="leading-relaxed text-slate-200">
                   {renderInlineBold(line.replace(/^[\s]*[•\-]\s|^[\s]*\d+[.)]\s/, ""))}
                 </li>
               ))}
@@ -316,7 +319,10 @@ function SolutionParagraphs({ text }: { text: string }) {
           );
         }
         return (
-          <p key={i} className="mb-2 last:mb-0 leading-relaxed whitespace-pre-wrap">
+          <p
+            key={i}
+            className="mb-2 last:mb-0 leading-relaxed whitespace-pre-wrap text-slate-200"
+          >
             {trimmed.split("\n").map((line, j) => (
               <span key={j}>
                 {j > 0 && <br />}
@@ -334,7 +340,9 @@ function renderInlineBold(str: string): React.ReactNode {
   const parts = str.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) =>
     part.startsWith("**") && part.endsWith("**") ? (
-      <strong key={i}>{part.slice(2, -2)}</strong>
+      <strong key={i} className="font-semibold text-slate-100">
+        {part.slice(2, -2)}
+      </strong>
     ) : (
       <span key={i}>{part}</span>
     )
@@ -365,8 +373,8 @@ function QuestionCard({
 
   return (
     <article
-      className={`rounded-xl border-2 bg-white overflow-hidden transition-colors ${
-        isExpanded ? "border-indigo-400" : "border-slate-200 hover:border-slate-300"
+      className={`rounded-xl border-2 bg-slate-900/60 overflow-hidden transition-colors ${
+        isExpanded ? "border-green-400" : "border-slate-200 hover:border-slate-300"
       }`}
     >
       {/* Card header — always visible (div + role=button to avoid nesting a button inside a button) */}
@@ -380,7 +388,7 @@ function QuestionCard({
             onToggleExpand();
           }
         }}
-        className="w-full flex items-start gap-3 p-4 text-left cursor-pointer rounded-t-xl focus:outline-none focus-visible:outline-2 focus-visible:outline-indigo-500 focus-visible:outline-offset-2 focus-visible:outline-solid"
+        className="w-full flex items-start gap-3 p-4 text-left cursor-pointer rounded-t-xl focus:outline-none focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2 focus-visible:outline-solid"
         aria-expanded={isExpanded}
       >
         <span className="mt-0.5 text-slate-400" aria-hidden>
@@ -403,7 +411,7 @@ function QuestionCard({
               {q.difficulty}
             </span>
           </div>
-          <h2 className="font-semibold text-slate-900">{q.title}</h2>
+          <h2 className="font-semibold text-slate-100">{q.title}</h2>
         </div>
         <button
           type="button"
@@ -424,15 +432,15 @@ function QuestionCard({
 
       {/* Expanded: question + solution */}
       {isExpanded && (
-        <div className="border-t border-slate-100 bg-slate-50/50 px-4 pb-4 pt-2">
+        <div className="border-t border-slate-700/70 bg-slate-950/20 px-4 pb-4 pt-2">
           <div className="space-y-4">
             {/* Question */}
             <div>
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
                 <Code2 className="w-4 h-4" />
                 Question
               </div>
-              <div className="rounded-lg bg-white border border-slate-200 p-4">
+              <div className="rounded-lg bg-slate-950/80 border border-slate-700 p-4">
                 <QuestionBody text={q.question} />
               </div>
             </div>
@@ -440,7 +448,7 @@ function QuestionCard({
             {/* Code snippet if any — rendered as code block */}
             {q.codeSnippet && (
               <div>
-                <div className="text-xs font-medium text-slate-500 mb-1">Reference</div>
+                <div className="text-xs font-medium text-slate-300 mb-1">Reference</div>
                 <CodeBlock code={q.codeSnippet} />
               </div>
             )}
@@ -451,7 +459,7 @@ function QuestionCard({
                 <button
                   type="button"
                   onClick={onPracticeWithAI}
-                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                 >
                   <MessageCircle className="w-4 h-4" />
                   Practice with AI
@@ -459,14 +467,14 @@ function QuestionCard({
                 <button
                   type="button"
                   onClick={onToggleSolution}
-                  className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                  className="flex items-center gap-2 text-sm font-medium text-green-600 hover:text-green-700"
                 >
                   <Lightbulb className="w-4 h-4" />
                   {showSolution ? "Hide solution" : "Show solution"}
                 </button>
               </div>
               {showSolution && (
-                <div className="mt-2 rounded-lg bg-sky-50/90 border border-sky-200 p-4 text-slate-800 text-sm leading-relaxed">
+                <div className="mt-2 rounded-lg bg-sky-950/30 border border-sky-800 p-4 text-slate-100 text-sm leading-relaxed">
                   <SolutionBody text={q.solution} />
                 </div>
               )}
@@ -477,7 +485,7 @@ function QuestionCard({
               {q.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2 py-0.5 rounded bg-slate-200/80 text-slate-600 text-xs"
+                  className="px-2 py-0.5 rounded bg-slate-800/60 text-slate-200 text-xs border border-slate-700/70"
                 >
                   {tag}
                 </span>

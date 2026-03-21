@@ -1,657 +1,270 @@
 "use client";
 
 import {
+  Activity,
+  ArrowRight,
   BookOpen,
-  CheckCircle,
-  ChevronRight,
-  Circle,
   Clock,
-  Code,
+  Code2,
+  Flame,
+  Sparkles,
   Target,
-  Users,
+  TrendingUp,
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getAllQuestions } from "@/lib/practiceQuestions";
 
-interface Week {
-  id: number;
-  title: string;
-  focus: string;
-  topics: string[];
-  deliverables: string[];
-  codingTarget: string;
-  completed: boolean;
-  progress: number;
+const PROGRESS_KEY = "practice-completed-ids";
+
+function loadCompletedCount(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return 0;
+    const arr = JSON.parse(raw) as string[];
+    return Array.isArray(arr) ? arr.length : 0;
+  } catch {
+    return 0;
+  }
 }
 
-interface Topic {
-  id: string;
-  name: string;
-  description: string;
-  category: "coding" | "ui" | "system-design" | "react" | "rn" | "behavioral";
-  completed: boolean;
-}
+export default function DashboardPage() {
+  const totalProblems = useMemo(() => getAllQuestions().length, []);
+  const [solved, setSolved] = useState(0);
 
-export default function InterviewRoadmap() {
-  const [selectedWeek, setSelectedWeek] = useState<number>(1);
-  const [completedTopics, setCompletedTopics] = useState<Set<string>>(
-    new Set()
-  );
+  useEffect(() => {
+    setSolved(loadCompletedCount());
+  }, []);
 
-  const weeks: Week[] = [
+  const accuracy = 82;
+  const streak = 12;
+  const hours = 38;
+
+  const recent = [
     {
-      id: 1,
-      title: "Baseline & JS Fundamentals",
-      focus: "JavaScript deep dive + React refresh",
-      topics: [
-        "Event loop (microtasks vs macrotasks)",
-        "Closures & prototypes",
-        "Promises & async/await",
-        "React reconciliation",
-        "Controlled vs uncontrolled",
-        "Effects lifecycle",
-      ],
-      deliverables: ["Autocomplete with debounced fetch + keyboard nav + a11y"],
-      codingTarget: "25 easy → medium problems (arrays/strings, hash maps)",
-      completed: false,
-      progress: 0,
+      problem: "Debounce Function",
+      category: "JavaScript",
+      difficulty: "medium" as const,
+      status: "solved" as const,
     },
     {
-      id: 2,
-      title: "Data Structures + UI Katas",
-      focus: "Sliding window + Virtualized components",
-      topics: [
-        "Sliding window algorithms",
-        "Two-pointers technique",
-        "Stack/queue problems",
-        "Virtualized list (10k rows)",
-        "Date range picker",
-        "React performance profiling",
-      ],
-      deliverables: [
-        "Virtualized list with sticky header",
-        "Date range picker (keyboard + a11y)",
-      ],
-      codingTarget: "20 problems (sliding window, two-pointers, stack/queue)",
-      completed: false,
-      progress: 0,
+      problem: "Virtual DOM Implementation",
+      category: "React",
+      difficulty: "hard" as const,
+      status: "attempted" as const,
     },
     {
-      id: 3,
-      title: "Frontend System Design I",
-      focus: "State architecture + Data fetching",
-      topics: [
-        "State architecture (feature vs app-wide)",
-        "Data fetching (SWR/RTK Query)",
-        "Caching strategies",
-        "Pagination patterns",
-        "Error handling",
-        "i18n & theming",
-      ],
-      deliverables: ["Notifications center", "Realtime comments system"],
-      codingTarget:
-        "15 mediums (maps/sets, prefix sums), 3 hards (graph BFS/DFS)",
-      completed: false,
-      progress: 0,
-    },
-    {
-      id: 4,
-      title: "Networking, Performance & Security",
-      focus: "Web performance + Security best practices",
-      topics: [
-        "Core Web Vitals (LCP/CLS/INP)",
-        "Critical CSS & image strategy",
-        "Bundle analysis",
-        "SSR vs SSG vs ISR",
-        "XSS & CSRF protection",
-        "CORS & security headers",
-      ],
-      deliverables: ["Lighthouse optimization", "React Profiler analysis"],
-      codingTarget: "15 mediums, 1-2 hards (binary search variants)",
-      completed: false,
-      progress: 0,
-    },
-    {
-      id: 5,
-      title: "React Native Focus",
-      focus: "RN architecture + Performance tuning",
-      topics: [
-        "Fabric & TurboModules",
-        "Hermes engine",
-        "Bridging patterns",
-        "Gesture/responder system",
-        "FlatList optimization",
-        "Reanimated basics",
-      ],
-      deliverables: [
-        "Chat list with pagination + optimistic send + offline queue",
-      ],
-      codingTarget: "10 mediums (trees/graphs light)",
-      completed: false,
-      progress: 0,
-    },
-    {
-      id: 6,
-      title: "Frontend System Design II",
-      focus: "Micro-frontends + Observability",
-      topics: [
-        "Micro-frontends vs monolith",
-        "Error boundaries strategy",
-        "Feature flags & A/B testing",
-        "Logging/metrics/tracing",
-        "RUM implementation",
-      ],
-      deliverables: [
-        "Schema-driven form engine",
-        "Large data grid",
-        "File uploader (5GB, chunking, retry)",
-      ],
-      codingTarget: "Mixed problems + system design focus",
-      completed: false,
-      progress: 0,
-    },
-    {
-      id: 7,
-      title: "Interview Simulation & Stories",
-      focus: "Mock interviews + Behavioral prep",
-      topics: [
-        "Mock coding interviews",
-        "UI implementation practice",
-        "System design drills",
-        "STAR story preparation",
-        "Impact quantification",
-      ],
-      deliverables: [
-        "2 coding mocks",
-        "1 UI mock",
-        "1 system design",
-        "1 behavioral",
-        "6 STAR stories",
-      ],
-      codingTarget: "Timed practice sessions",
-      completed: false,
-      progress: 0,
-    },
-    {
-      id: 8,
-      title: "Targeted Gaps + Polishing",
-      focus: "Weak spot filling + Final prep",
-      topics: [
-        "Gap analysis",
-        "Company-specific practice",
-        "Trade-off explanations",
-        "Resume optimization",
-        "Final dry run",
-      ],
-      deliverables: [
-        "One full mock loop",
-        "Resume rewrite",
-        "Portfolio polish",
-      ],
-      codingTarget: "Targeted practice based on gaps",
-      completed: false,
-      progress: 0,
+      problem: "Flatten Array",
+      category: "Arrays",
+      difficulty: "easy" as const,
+      status: "not-started" as const,
     },
   ];
 
-  const topics: Topic[] = [
-    // JavaScript & Browser
-    {
-      id: "js-event-loop",
-      name: "Event Loop & Async",
-      description: "Microtasks vs macrotasks, promise scheduling",
-      category: "coding",
-      completed: false,
-    },
-    {
-      id: "js-closures",
-      name: "Closures & Prototypes",
-      description: "Scope chains, prototype inheritance",
-      category: "coding",
-      completed: false,
-    },
-    {
-      id: "js-modules",
-      name: "Modules & Hoisting",
-      description: "ES6 modules, temporal dead zone",
-      category: "coding",
-      completed: false,
-    },
-
-    // React Web
-    {
-      id: "react-reconciliation",
-      name: "Reconciliation",
-      description: "Virtual DOM diffing, key optimization",
-      category: "react",
-      completed: false,
-    },
-    {
-      id: "react-hooks",
-      name: "Hooks Deep Dive",
-      description: "Rules, effect timing, transitions",
-      category: "react",
-      completed: false,
-    },
-    {
-      id: "react-performance",
-      name: "React Performance",
-      description: "Profiling, memoization, virtualization",
-      category: "react",
-      completed: false,
-    },
-
-    // React Native
-    {
-      id: "rn-architecture",
-      name: "RN Architecture",
-      description: "Fabric, TurboModules, bridging",
-      category: "rn",
-      completed: false,
-    },
-    {
-      id: "rn-performance",
-      name: "RN Performance",
-      description: "FlatList, Reanimated, memory management",
-      category: "rn",
-      completed: false,
-    },
-
-    // System Design
-    {
-      id: "sd-caching",
-      name: "Caching Strategy",
-      description: "SWR, RTK Query, cache invalidation",
-      category: "system-design",
-      completed: false,
-    },
-    {
-      id: "sd-performance",
-      name: "Performance Architecture",
-      description: "SSR/SSG/ISR, Core Web Vitals",
-      category: "system-design",
-      completed: false,
-    },
-    {
-      id: "sd-observability",
-      name: "Observability",
-      description: "RUM, error tracking, metrics",
-      category: "system-design",
-      completed: false,
-    },
-
-    // UI Implementation
-    {
-      id: "ui-virtualization",
-      name: "Virtualization",
-      description: "Large lists, infinite scroll",
-      category: "ui",
-      completed: false,
-    },
-    {
-      id: "ui-accessibility",
-      name: "Accessibility",
-      description: "ARIA, keyboard navigation, screen readers",
-      category: "ui",
-      completed: false,
-    },
-    {
-      id: "ui-performance",
-      name: "UI Performance",
-      description: "Bundle splitting, lazy loading",
-      category: "ui",
-      completed: false,
-    },
-
-    // Behavioral
-    {
-      id: "behavioral-leadership",
-      name: "Leadership Stories",
-      description: "Scope, impact, cross-team collaboration",
-      category: "behavioral",
-      completed: false,
-    },
-    {
-      id: "behavioral-impact",
-      name: "Impact Quantification",
-      description: "Metrics, outcomes, measurable results",
-      category: "behavioral",
-      completed: false,
-    },
-  ];
-
-  const toggleTopic = (topicId: string) => {
-    const newCompleted = new Set(completedTopics);
-    if (newCompleted.has(topicId)) {
-      newCompleted.delete(topicId);
-    } else {
-      newCompleted.add(topicId);
-    }
-    setCompletedTopics(newCompleted);
+  const diffPill = (d: "easy" | "medium" | "hard") => {
+    const map = {
+      easy: "bg-emerald-950/60 text-emerald-400 border-emerald-800/60",
+      medium: "bg-amber-950/60 text-amber-400 border-amber-800/60",
+      hard: "bg-red-950/60 text-red-400 border-red-800/60",
+    };
+    return (
+      <span className={`rounded-full border px-2 py-0.5 text-xs capitalize ${map[d]}`}>
+        {d}
+      </span>
+    );
   };
 
-  const getCategoryIcon = (category: Topic["category"]) => {
-    switch (category) {
-      case "coding":
-        return <Code className="w-4 h-4" />;
-      case "ui":
-        return <Target className="w-4 h-4" />;
-      case "system-design":
-        return <BookOpen className="w-4 h-4" />;
-      case "react":
-        return <Zap className="w-4 h-4" />;
-      case "rn":
-        return <Users className="w-4 h-4" />;
-      case "behavioral":
-        return <Users className="w-4 h-4" />;
-    }
+  const statusCell = (s: "solved" | "attempted" | "not-started") => {
+    if (s === "solved")
+      return <span className="font-medium text-green-400">Solved</span>;
+    if (s === "attempted")
+      return <span className="font-medium text-amber-400">Attempted</span>;
+    return <span className="text-zinc-500">Not Started</span>;
   };
-
-  const getCategoryColor = (category: Topic["category"]) => {
-    switch (category) {
-      case "coding":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "ui":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "system-design":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      case "react":
-        return "bg-cyan-100 text-cyan-800 border-cyan-200";
-      case "rn":
-        return "bg-orange-100 text-orange-800 border-orange-200";
-      case "behavioral":
-        return "bg-pink-100 text-pink-800 border-pink-200";
-    }
-  };
-
-  const selectedWeekData = weeks.find((w) => w.id === selectedWeek);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Senior Frontend Interview Prep
+    <div className="min-h-full bg-[var(--shell-content)]">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <header className="mb-10">
+          <h1 className="text-3xl font-bold tracking-tight text-white">
+            Welcome back, <span className="text-green-500">Developer</span>
           </h1>
-          <p className="text-gray-600 mt-1">8-Week Roadmap to Success</p>
-          <div className="flex flex-wrap gap-6 mt-4 text-sm">
-            <div>
-              <span className="text-gray-500">Target role</span>
-              <span className="ml-2 font-medium text-gray-900">Senior Frontend Engineer</span>
-            </div>
-            <div>
-              <span className="text-gray-500">Time commitment</span>
-              <span className="ml-2 font-medium text-gray-900">10–15 hrs/week</span>
-            </div>
-          </div>
+          <p className="mt-2 text-zinc-500">
+            Keep your streak going — practice makes perfect.
+          </p>
         </header>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Weekly Progress */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                Weekly Progress
-              </h2>
-              <div className="space-y-4">
-                {weeks.map((week) => (
-                  <div
-                    key={week.id}
-                    role="button"
-                    tabIndex={0}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
-                      selectedWeek === week.id
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => setSelectedWeek(week.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setSelectedWeek(week.id);
-                      }
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium text-gray-900">
-                        Week {week.id}
-                      </h3>
-                      {week.completed ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                      ) : (
-                        <Circle className="w-5 h-5 text-gray-400" />
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">{week.title}</p>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full transition-all"
-                        style={{ width: `${week.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* Week Details */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border p-6">
-              {selectedWeekData && (
-                <>
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900">
-                        Week {selectedWeekData.id}
-                      </h2>
-                      <p className="text-xl text-gray-600">
-                        {selectedWeekData.title}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <Clock className="w-4 h-4" />
-                      <span>10-15 hours</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Focus Areas */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Focus Areas
-                      </h3>
-                      <p className="text-gray-600 mb-4">
-                        {selectedWeekData.focus}
-                      </p>
-
-                      <h4 className="font-medium text-gray-900 mb-2">
-                        Topics to Master:
-                      </h4>
-                      <ul className="space-y-2">
-                        {selectedWeekData.topics.map((topic, index) => (
-                          <li
-                            key={index}
-                            className="flex items-start space-x-2"
-                          >
-                            <Circle className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm text-gray-600">
-                              {topic}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Deliverables */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Deliverables
-                      </h3>
-                      <ul className="space-y-2">
-                        {selectedWeekData.deliverables.map(
-                          (deliverable, index) => (
-                            <li
-                              key={index}
-                              className="flex items-start space-x-2"
-                            >
-                              <Target className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm text-gray-600">
-                                {deliverable}
-                              </span>
-                            </li>
-                          )
-                        )}
-                      </ul>
-
-                      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                        <h4 className="font-medium text-blue-900 mb-2">
-                          Coding Target
-                        </h4>
-                        <p className="text-sm text-blue-700">
-                          {selectedWeekData.codingTarget}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Topic Mastery */}
-        <div className="mt-8">
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Topic Mastery Checklist
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {topics.map((topic) => (
-                <div
-                  key={topic.id}
-                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    completedTopics.has(topic.id)
-                      ? "border-green-500 bg-green-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  onClick={() => toggleTopic(topic.id)}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(
-                        topic.category
-                      )}`}
-                    >
-                      {getCategoryIcon(topic.category)}
-                      <span className="ml-1 capitalize">
-                        {topic.category.replace("-", " ")}
-                      </span>
-                    </div>
-                    {completedTopics.has(topic.id) ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <Circle className="w-5 h-5 text-gray-400" />
-                    )}
-                  </div>
-                  <h3 className="font-medium text-gray-900 mb-1">
-                    {topic.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">{topic.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* FEI Questions from interview */}
-        <div className="mt-8">
-          <div className="rounded-xl shadow-sm border border-indigo-100 p-6 bg-indigo-50/30">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-indigo-100 rounded-lg">
-                  <BookOpen className="w-6 h-6 text-indigo-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    From My Interview
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Questions & solutions from your FEI prep — categorized by section and difficulty
-                  </p>
-                </div>
-              </div>
-              <Link
-                href="/fei-questions"
-                className="inline-flex items-center gap-2 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+        {/* Stats */}
+        <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              label: "Problems Solved",
+              value: `${solved}/${totalProblems}`,
+              icon: Code2,
+              iconBg: "bg-blue-500/15 text-blue-400",
+            },
+            {
+              label: "Current Streak",
+              value: `${streak} days`,
+              icon: Flame,
+              iconBg: "bg-orange-500/15 text-orange-400",
+            },
+            {
+              label: "Time Practiced",
+              value: `${hours}h`,
+              icon: Clock,
+              iconBg: "bg-violet-500/15 text-violet-400",
+            },
+            {
+              label: "Accuracy",
+              value: `${accuracy}%`,
+              icon: TrendingUp,
+              iconBg: "bg-green-500/15 text-green-400",
+            },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="flex items-center gap-4 rounded-xl border border-zinc-800 bg-[#141414] p-4"
+            >
+              <div
+                className={`flex h-11 w-11 items-center justify-center rounded-lg ${s.iconBg}`}
               >
-                Open curriculum
-                <ChevronRight className="w-4 h-4" />
-              </Link>
+                <s.icon className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold tabular-nums text-white">{s.value}</p>
+                <p className="text-xs text-zinc-500">{s.label}</p>
+              </div>
             </div>
+          ))}
+        </div>
+
+        {/* Category cards */}
+        <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+          <Link
+            href="/coding"
+            className="group flex flex-col rounded-xl border border-zinc-800 bg-[#141414] p-6 transition-colors hover:border-green-500/30"
+          >
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/15 text-green-500">
+              <Code2 className="h-5 w-5" />
+            </div>
+            <h2 className="text-lg font-semibold text-white">DSA Problems</h2>
+            <p className="mt-2 flex-1 text-sm text-zinc-500">
+              Arrays, strings, trees, graphs — solve in the built-in IDE with tests.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-green-500 group-hover:gap-2">
+              {totalProblems}+ problems <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+
+          <Link
+            href="/system-design"
+            className="group flex flex-col rounded-xl border border-zinc-800 bg-[#141414] p-6 transition-colors hover:border-green-500/30"
+          >
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/15 text-green-500">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <h2 className="text-lg font-semibold text-white">System Design</h2>
+            <p className="mt-2 flex-1 text-sm text-zinc-500">
+              Frontend architecture, scaling, caching, and real-time patterns.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-green-500 group-hover:gap-2">
+              Open drills <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+
+          <Link
+            href="/practice"
+            className="group flex flex-col rounded-xl border border-zinc-800 bg-[#141414] p-6 transition-colors hover:border-green-500/30"
+          >
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/15 text-green-500">
+              <Zap className="h-5 w-5" />
+            </div>
+            <h2 className="text-lg font-semibold text-white">Practice Questions</h2>
+            <p className="mt-2 flex-1 text-sm text-zinc-500">
+              Hands-on JS challenges — Monaco editor, IntelliSense, and test runner.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-green-500 group-hover:gap-2">
+              Browse bank <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+        </div>
+
+        {/* Recent activity */}
+        <div>
+          <div className="mb-4 flex items-center gap-2">
+            <Activity className="h-5 w-5 text-zinc-500" />
+            <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+          </div>
+          <div className="overflow-hidden rounded-xl border border-zinc-800 bg-[#141414]">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 text-zinc-500">
+                  <th className="px-4 py-3 font-medium">Problem</th>
+                  <th className="px-4 py-3 font-medium">Category</th>
+                  <th className="px-4 py-3 font-medium">Difficulty</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800">
+                {recent.map((row) => (
+                  <tr key={row.problem} className="hover:bg-white/[0.02]">
+                    <td className="px-4 py-3 font-medium text-white">{row.problem}</td>
+                    <td className="px-4 py-3 text-zinc-400">{row.category}</td>
+                    <td className="px-4 py-3">{diffPill(row.difficulty)}</td>
+                    <td className="px-4 py-3">{statusCell(row.status)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Code className="w-6 h-6 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Coding Practice
-              </h3>
+        {/* Quick links row */}
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            className="pointer-events-none flex cursor-not-allowed items-center gap-3 rounded-xl border border-zinc-800/80 bg-[#141414] p-4 opacity-70"
+            title="Coming soon"
+            aria-disabled="true"
+          >
+            <Target className="h-8 w-8 text-zinc-600" />
+            <div>
+              <p className="font-medium text-zinc-400">UI Katas</p>
+              <p className="text-xs text-zinc-600">Coming soon</p>
             </div>
-            <p className="text-gray-600 mb-4">
-              Focus on arrays/strings, hash maps, sliding window, and BFS/DFS
-            </p>
-            <Link
-              href="/coding"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors inline-block text-center"
-            >
-              Start Practice
-            </Link>
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Target className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">UI Katas</h3>
+          <Link
+            href="/fei-questions"
+            className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-[#141414] p-4 transition-colors hover:border-green-500/25"
+          >
+            <Sparkles className="h-8 w-8 text-green-500/90" />
+            <div>
+              <p className="font-medium text-white">From My Interview</p>
+              <p className="text-xs text-zinc-500">Curated Q&A + AI practice</p>
             </div>
-            <p className="text-gray-600 mb-4">
-              Build complex components: tables, editors, drag-drop, virtualized
-              lists
-            </p>
-            <Link
-              href="/ui-katas"
-              className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors inline-block text-center"
-            >
-              View Katas
-            </Link>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <BookOpen className="w-6 h-6 text-purple-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                System Design
-              </h3>
+          </Link>
+          <Link
+            href="/study-plans"
+            className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-[#141414] p-4 transition-colors hover:border-green-500/25"
+          >
+            <BookOpen className="h-8 w-8 text-green-500/90" />
+            <div>
+              <p className="font-medium text-white">Study Plans</p>
+              <p className="text-xs text-zinc-500">8-week structured roadmap</p>
             </div>
-            <p className="text-gray-600 mb-4">
-              Architecture for large apps: state, caching, performance, a11y
-            </p>
-            <Link
-              href="/system-design"
-              className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors inline-block text-center"
-            >
-              Design Drills
-            </Link>
-          </div>
+          </Link>
+          <Link
+            href="/leaderboard"
+            className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-[#141414] p-4 transition-colors hover:border-green-500/25"
+          >
+            <TrendingUp className="h-8 w-8 text-green-500/90" />
+            <div>
+              <p className="font-medium text-white">Leaderboard</p>
+              <p className="text-xs text-zinc-500">Top performers (demo)</p>
+            </div>
+          </Link>
         </div>
       </div>
     </div>
